@@ -210,11 +210,13 @@ class FileManager():
         pass
 
     def run_tf_record_script(self):
-        if os.path.exists('/home/deeplearning/tensorflow/models/research/object_detection/dataset_tools'):
-            script_path = '/home/deeplearning/tensorflow/models/research/object_detection/dataset_tools/create_pascal_tf_record.py'
+        if os.path.exists('/home/alex/.local/lib/python3.5/site-packages/tensorflow/models/research/object_detection/dataset_tools'):
+            script_path = '/home/alex/.local/lib/python3.5/site-packages/tensorflow/models/research/object_detection/dataset_tools/create_pascal_tf_record.py'
             data_dir = self.project_path
             lbl_map_path = self.project_path + '/VOC2012/pascal_label_map.pbtxt'
-            os.system('python3 ' + script_path + ' --data_dir=' + data_dir +' --year=VOC2012 --output_path='+data_dir+'project_train.record --label_map_path='+ lbl_map_path)
-            os.system('python3 ' + script_path + '--data_dir=' + data_dir + ' --year=VOC2012 --set=val --output_path=' + data_dir + 'project_val.record --label_map_path=' + lbl_map_path)
+            os.system('export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim')
+            export_command = 'export PYTHONPATH=/home/alex/.local/lib/python3.5/site-packages/tensorflow/models/research/'
+            os.system(export_command + ' & python3 ' + script_path + ' --data_dir=' + data_dir +' --year=VOC2012 --output_path='+data_dir+'project_train.record --label_map_path='+ lbl_map_path)
+            os.system(export_command + ' & python3 ' + script_path + ' --data_dir=' + data_dir + ' --year=VOC2012 --set=val --output_path=' + data_dir + 'project_val.record --label_map_path=' + lbl_map_path)
         else:
             print('ERROR: Path to dataset_tools does not exist ')
