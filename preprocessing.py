@@ -71,6 +71,7 @@ class Ui_Preprocessing(object):
         self.listDataPaths.setFont(font)
         self.listDataPaths.setAcceptDrops(True)
         self.listDataPaths.setObjectName("listDataPaths")
+        self.listDataPaths.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.gridLayout.addWidget(self.listDataPaths, 4, 0, 1, 4)
         self.lblTrain = QtWidgets.QLabel(self.centralwidget)
         font = QtGui.QFont()
@@ -272,23 +273,28 @@ class Ui_Preprocessing(object):
             self.lblProject.setText(directory)
             self.txtProjectName.clear()
             self.txtLog.append("Project created at " + directory + "\n")
-        self.fm = FileManager.FileManager(directory)
-        self.lblProject.setText(directory)
-        self.txtProjectName.clear()
-        self.txtLog.append("Project created at " + directory + "\n")
+            self.fm = FileManager.FileManager(directory)
+            self.lblProject.setText(directory)
+            self.txtProjectName.clear()
+            self.txtLog.append("Project created at " + directory + "\n")
 
     def SelectProject_Clicked(self):
         dialog = QtWidgets.QFileDialog()
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
-                                                os.path.curdir) + '/'
-        self.fm = FileManager.FileManager(directory)
-        self.fm.check_files()
-        self.lblProject.setText(directory)
-        self.txtLog.append("Project loaded from " + directory + "\n")
-        self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
-        self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
+                                                os.path.curdir)
+        print(directory)
+        if directory:
+            directory = directory + '/'
+            self.fm = FileManager.FileManager(directory)
+            self.fm.check_files()
+            self.lblProject.setText(directory)
+            self.txtLog.append("Project loaded from " + directory + "\n")
+            self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
+            self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
+        else:
+            print('hello')
 
     def SelectData_Clicked(self):
         dialog = QtWidgets.QFileDialog()
