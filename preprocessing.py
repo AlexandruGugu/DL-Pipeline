@@ -250,7 +250,14 @@ class Ui_Preprocessing(object):
         dialog = QtWidgets.QFileDialog()
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder', os.path.curdir) +'/'+self.txtProjectName.toPlainText() + '/'
+        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
+                                                os.path.curdir)
+        if directory:
+            directory = directory + '/' + self.txtProjectName.toPlainText() + '/'
+            self.fm = FileManager.FileManager(directory)
+            self.lblProject.setText(directory)
+            self.txtProjectName.clear()
+            self.txtLog.append("Project created at " + directory + "\n")
         self.fm = FileManager.FileManager(directory)
         self.lblProject.setText(directory)
         self.txtProjectName.clear()
