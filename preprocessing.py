@@ -209,6 +209,8 @@ class Ui_Preprocessing(object):
         self.btnGenerateRecords.clicked.connect(self.GenerateRecord_Clicked)
         # self.btnUpdatePaths.clicked.connect(self.UpdatePaths_Clicked)
 
+        self.listDataPaths.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.listDataPaths.customContextMenuRequested.connect(self.OpenMenu)
         # FILEMANAGER
         self.fm = None
 
@@ -267,7 +269,7 @@ class Ui_Preprocessing(object):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
-        if directory:
+        if directory  and dialog.result() == QtWidgets.QFileDialog.Accepted:
             directory = directory + '/' + self.txtProjectName.toPlainText() + '/'
             self.fm = FileManager.FileManager(directory)
             self.lblProject.setText(directory)
@@ -285,7 +287,7 @@ class Ui_Preprocessing(object):
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
         print(directory)
-        if directory:
+        if directory and dialog.result() == QtWidgets.QFileDialog.Accepted:
             directory = directory + '/'
             self.fm = FileManager.FileManager(directory)
             self.fm.check_files()
@@ -330,6 +332,12 @@ class Ui_Preprocessing(object):
         # self.fm.edit_config_files()
         self.fm.run_tf_record_script()
 
+    def OpenMenu(self, position):
+        menu = QtWidgets.QMenu()
+        quitAction = menu.addAction("Quit")
+        action = menu.exec_(self.listDataPaths.mapToGlobal(position))
+        if action == quitAction:
+            pass
 
 if __name__ == "__main__":
     import sys
