@@ -29,9 +29,12 @@ class FileManager():
         self.all_bad_labels = []
         self.imageset_data = []
 
+
         #All files in folder
-        self.all_files_in_image_folder=glob.glob('VOC2012/JPEGImages/*')
-        self.all_files_in_labels_folder=glob.glob('VOC2012/Annotations/*')
+        self.all_files_in_import_folders = []
+        self.all_files_in_image_folder=glob.glob(project_path +'VOC2012/JPEGImages/*')
+        self.all_files_in_labels_folder=glob.glob(project_path + 'VOC2012/Annotations/*')
+
 
         #All needed files in folder
         self.all_image_files = []
@@ -58,18 +61,17 @@ class FileManager():
         img_files = []
         xml_files = []
         for path in data_paths:
+            self.all_files_in_import_folders.extend(glob.glob(path + '*'))
             for ext in FileManager.labels_extensions:
                 xml_files.extend(glob.glob(path + "*." + ext))
             for ext in FileManager.images_extensions:
                 img_files.extend(glob.glob(path + "*." + ext))
         for filename in img_files:
             file_id = filename.split("/")[-1]
-            shutil.copy(filename, project_path+"VOC2012/JPEGImages/"+file_id)
+            shutil.copy(filename, project_path+"VOC2012/JPEGImages/"+file_id.split(".")[0]+".jpg")
         for filename in xml_files:
             file_id = filename.split("/")[-1]
             shutil.copy(filename, project_path + "VOC2012/Annotations/" + file_id)
-        self.all_files_in_image_folder = glob.glob('VOC2012/JPEGImages/*')
-        self.all_files_in_labels_folder = glob.glob('VOC2012/Annotations/*')
 
         # All needed files in folder
         self.all_image_files = []
@@ -79,8 +81,15 @@ class FileManager():
         for ext in FileManager.labels_extensions:
             self.all_xml_files.extend(glob.glob(project_path + 'VOC2012/Annotations/*.' + ext))
         self.edit_label_xml()
+        self.check_files()
 
     def check_files(self):
+        #check for wrong files in import source folders
+        for index, filename in enumerate(self.all_files_in_import_folders):
+            if (filename.split('.')[-1] not in FileManager.images_extensions) and (filename.split('.')[-1] not in  FileManager.labels_extensions):
+                print('This file has wrong extension: {} '.format(filename))
+                os.rename(filename, self.project_path + '/bad_files/' + filename.split('/')[-1])
+        self.all_files_in_import_folders = []
         # check pictures extensions
         for index, filename in enumerate(self.all_files_in_image_folder):
             if filename.split('.')[-1] not in FileManager.images_extensions:
@@ -103,17 +112,20 @@ class FileManager():
         for index,jpg_id in enumerate(jpg_files_ids):
             if jpg_id not in xml_files_ids:
                 print('This picture has no label file: ' + jpg_id)
-                self.all_bad_images.append(self.all_image_files.pop(index))
+                self.all_bad_images.append(self.all_image_files.pop(self.all_image_files.index(self.project_path + "VOC2012/JPEGImages/" + jpg_id + ".jpg")))
         for index,xml_id in enumerate(xml_files_ids):
             if xml_id not in jpg_files_ids:
                 print('This xml file has no picture file: ' + xml_id)
-                self.all_bad_labels.append(self.all_bad_labels.pop(index))
+                self.all_bad_labels.append(self.all_xml_files.pop(self.all_xml_files.index(self.project_path + "VOC2012/Annotations/" + xml_id + ".xml")))
+
 
         # move bad files to new folder
         if not os.path.exists(self.project_path+'/bad_files'):
             os.makedirs(self.project_path+'/bad_files')
-        for filename in self.all_bad_images and self.all_bad_labels:
+        for filename in self.all_bad_images:
             os.rename(filename, self.project_path+'/bad_files/'+filename.split('/')[-1])
+        for filename in self.all_bad_labels:
+            os.rename(filename, self.project_path + '/bad_files/' + filename.split('/')[-1])
 
 
 
@@ -130,8 +142,10 @@ class FileManager():
             root.find("./folder[1]").text = str(new_folder)
             # set up new path
             image_id = root.find("./filename[1]").text
+            image_jpg = str(image_id).split(".")[0] + ".jpg"
+            root.find("./filename[1]").text = image_jpg
             new_path = self.project_path+'VOC2012/JPEGImages/'
-            root.find("./path[1]").text = str(new_path + image_id)
+            root.find("./path[1]").text = str(new_path) + image_jpg
             # overwrite file
             tree.write(filename)
 
@@ -216,7 +230,8 @@ class FileManager():
             lbl_map_path = self.project_path + '/VOC2012/pascal_label_map.pbtxt'
             os.system('export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim')
             export_command = 'export PYTHONPATH=/home/alex/.local/lib/python3.5/site-packages/tensorflow/models/research/'
-            os.system(export_command + ' & python3 ' + script_path + ' --data_dir=' + data_dir +' --year=VOC2012 --output_path='+data_dir+'project_train.record --label_map_path='+ lbl_map_path)
-            os.system(export_command + ' & python3 ' + script_path + ' --data_dir=' + data_dir + ' --year=VOC2012 --set=val --output_path=' + data_dir + 'project_val.record --label_map_path=' + lbl_map_path)
+            os.system(export_command)
+            os.system('python3 ' + script_path + ' --data_dir=' + data_dir +' --year=VOC2012 --output_path='+data_dir+'project_train.record --label_map_path='+ lbl_map_path)
+            os.system('python3 ' + script_path + ' --data_dir=' + data_dir + ' --year=VOC2012 --set=val --output_path=' + data_dir + 'project_val.record --label_map_path=' + lbl_map_path)
         else:
             print('ERROR: Path to dataset_tools does not exist ')
