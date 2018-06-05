@@ -10,6 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import FileManager
 import os
 
+
 class Ui_Preprocessing(object):
     def setupUi(self, Preprocessing):
         Preprocessing.setObjectName("Preprocessing")
@@ -196,7 +197,7 @@ class Ui_Preprocessing(object):
         self.retranslateUi(Preprocessing)
         QtCore.QMetaObject.connectSlotsByName(Preprocessing)
 
-	#BINDINGS
+        # BINDINGS
         self.horizontalSlider.valueChanged.connect(self.sliderValueChanged)
         self.btnNewProject.clicked.connect(self.NewProject_Clicked)
         self.btnLoadProject.clicked.connect(self.SelectProject_Clicked)
@@ -204,9 +205,9 @@ class Ui_Preprocessing(object):
         self.btnLoadAddData.clicked.connect(self.AddData_Clicked)
         self.btnGenerteImageSets.clicked.connect(self.GenerateImageSets_Clicked)
         self.btnGenerateRecords.clicked.connect(self.GenerateRecord_Clicked)
-        #self.btnUpdatePaths.clicked.connect(self.UpdatePaths_Clicked)
+        # self.btnUpdatePaths.clicked.connect(self.UpdatePaths_Clicked)
 
-        #FILEMANAGER
+        # FILEMANAGER
         self.fm = None
 
     def retranslateUi(self, Preprocessing):
@@ -232,8 +233,8 @@ class Ui_Preprocessing(object):
         self.actionLocal_Paths.setText(_translate("Preprocessing", "Local Paths"))
 
     def sliderValueChanged(self, value):
-        self.lblTrainPercentage.setText(str(value)+'%')
-        self.lblEvalPercentage.setText(str(100-value)+'%')
+        self.lblTrainPercentage.setText(str(value) + '%')
+        self.lblEvalPercentage.setText(str(100 - value) + '%')
         if self.fm != None:
             if self.fm.all_image_files != None:
                 data_count = len(self.fm.all_image_files)
@@ -243,7 +244,7 @@ class Ui_Preprocessing(object):
                 self.lblTrainCount.setText(str(train_count))
 
     def NewProject_Clicked(self):
-        #self.txtLog.setText('works')
+        # self.txtLog.setText('works')
         if self.txtProjectName.toPlainText() == '':
             self.txtLog.append('Please enter a project name!')
             return
@@ -262,52 +263,61 @@ class Ui_Preprocessing(object):
         self.lblProject.setText(directory)
         self.txtProjectName.clear()
         self.txtLog.append("Project created at " + directory + "\n")
+
     def SelectProject_Clicked(self):
         dialog = QtWidgets.QFileDialog()
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder', os.path.curdir) + '/'
+        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
+                                                os.path.curdir) + '/'
         self.fm = FileManager.FileManager(directory)
         self.fm.check_files()
         self.lblProject.setText(directory)
         self.txtLog.append("Project loaded from " + directory + "\n")
         self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
         self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
+
     def SelectData_Clicked(self):
         dialog = QtWidgets.QFileDialog()
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory That Contains Pictures/Labels', os.path.curdir) + '/'
-        items = self.listDataPaths.findItems(directory,QtCore.Qt.MatchExactly)
+        directory = dialog.getExistingDirectory(None, 'Choose Directory That Contains Pictures/Labels',
+                                                os.path.curdir) + '/'
+        items = self.listDataPaths.findItems(directory, QtCore.Qt.MatchExactly)
         if len(items) == 0:
             self.listDataPaths.addItem(directory)
+
     def AddData_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
         data_paths = []
         for index in range(self.listDataPaths.count()):
             data_paths.append(str(self.listDataPaths.item(index).text()))
             print(str(self.listDataPaths.item(index).text()))
-        self.fm.import_files(data_paths,self.fm.project_path)
+        self.fm.import_files(data_paths, self.fm.project_path)
+
     def GenerateImageSets_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
         self.fm.check_files()
         self.fm.edit_label_xml()
         self.txtLog.append(self.fm.generate_txt_files(self.horizontalSlider.value()))
+
     def UpdatePaths_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
         self.fm.check_files()
         self.fm.edit_label_xml()
-        #TODO:pipeline.cfg path
+        # TODO:pipeline.cfg path
+
     def GenerateRecord_Clicked(self):
-        #self.fm.edit_config_files()
+        # self.fm.edit_config_files()
         self.fm.run_tf_record_script()
+
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     Preprocessing = QtWidgets.QMainWindow()
     ui = Ui_Preprocessing()
     ui.setupUi(Preprocessing)
     Preprocessing.show()
     sys.exit(app.exec_())
-
