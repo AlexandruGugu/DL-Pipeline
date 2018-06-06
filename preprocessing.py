@@ -269,7 +269,7 @@ class Ui_Preprocessing(object):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
-        if directory  and dialog.result() == QtWidgets.QFileDialog.Accepted:
+        if directory  and dialog.result() == QtWidgets.QFileDialog.AcceptOpen:
             directory = directory + '/' + self.txtProjectName.toPlainText() + '/'
             self.fm = FileManager.FileManager(directory)
             self.lblProject.setText(directory)
@@ -287,7 +287,7 @@ class Ui_Preprocessing(object):
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
         print(directory)
-        if directory and dialog.result() == QtWidgets.QFileDialog.Accepted:
+        if directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen):
             directory = directory + '/'
             self.fm = FileManager.FileManager(directory)
             self.fm.check_files()
@@ -304,17 +304,19 @@ class Ui_Preprocessing(object):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory That Contains Pictures/Labels',
                                                 os.path.curdir) + '/'
-        items = self.listDataPaths.findItems(directory, QtCore.Qt.MatchExactly)
-        if len(items) == 0:
-            self.listDataPaths.addItem(directory)
+        if directory and dialog.result() == QtWidgets.QFileDialog.AcceptOpen:
+            items = self.listDataPaths.findItems(directory, QtCore.Qt.MatchExactly)
+            if len(items) == 0:
+                self.listDataPaths.addItem(directory)
 
     def AddData_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
         data_paths = []
         for index in range(self.listDataPaths.count()):
             data_paths.append(str(self.listDataPaths.item(index).text()))
-            print(str(self.listDataPaths.item(index).text()))
+            #print(str(self.listDataPaths.item(index).text()))
         self.fm.import_files(data_paths, self.fm.project_path)
+        self.listDataPaths.clear()
 
     def GenerateImageSets_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
@@ -330,14 +332,26 @@ class Ui_Preprocessing(object):
 
     def GenerateRecord_Clicked(self):
         # self.fm.edit_config_files()
+        if self.fm.tensorflow_path == '':
+            dialog = QtWidgets.QFileDialog()
+            dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+            dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
+            directory = dialog.getExistingDirectory(None, 'Choose Tensorflow Root Directory (Eg. /home/user/.local/lib/python3.5/site-packages/tensorflow',
+                                                    os.path.curdir) + '/'
+            if not (directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen)):
+                print('tensorflow path not loaded')
+                return
+            self.fm.tensorflow_path = directory
         self.fm.run_tf_record_script()
 
     def OpenMenu(self, position):
         menu = QtWidgets.QMenu()
-        quitAction = menu.addAction("Quit")
+        deleteAction = menu.addAction("Delete")
         action = menu.exec_(self.listDataPaths.mapToGlobal(position))
-        if action == quitAction:
-            pass
+        if action == deleteAction:
+            selected_items = self.listDataPaths.selectedItems()
+            for item in selected_items:
+                self.listDataPaths.items().remove(item)
 
 if __name__ == "__main__":
     import sys
