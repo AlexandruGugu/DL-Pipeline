@@ -250,8 +250,8 @@ class FileManager():
                     f.write(data[index][1] + '\n')
             notification_message = notification_message + '---' + key + '---\n'
             notification_message = notification_message + 'Total number of objects: ' + str(value.object_count) + '\n'
-            notification_message = notification_message + 'Training images : ' + str(total_train_count) + '(' + str(true_count_train) + ' with objects)\n'
-            notification_message = notification_message + 'Evaluation images: ' + str(total_eval_count) + '(' + str(true_count_val) + ' with objects)\n\n'
+            notification_message = notification_message + 'Training images : ' + str(total_train_count) + '/' + str(total_train_count + total_eval_count)  + '(' + str(true_count_train) + ' pictures with object)\n'
+            notification_message = notification_message + 'Evaluation images: ' + str(total_eval_count) + '/' + str(total_train_count + total_eval_count)  + '(' + str(true_count_val) + ' pictures with object)\n\n'
             #notification_message = notification_message + "Class " + key + " contains " + str(value.object_count) + " objects.\n"
             #notification_message = notification_message + "ImageSet file for class " + key + " training was generated with " + str(train_count) + " images.\n"
             #notification_message = notification_message + "ImageSet file for class " + key + " evaluation was generated with " + str(eval_count) + " images.\n"
