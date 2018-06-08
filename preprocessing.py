@@ -337,6 +337,7 @@ class Ui_Preprocessing(object):
             items = self.listDataPaths.findItems(directory, QtCore.Qt.MatchExactly)
             if len(items) == 0:
                 self.listDataPaths.addItem(directory)
+        self.txtLog.append('Selected data.' + '\n')
 
     def AddData_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
@@ -346,6 +347,7 @@ class Ui_Preprocessing(object):
             #print(str(self.listDataPaths.item(index).text()))
         self.fm.import_files(data_paths, self.fm.project_path)
         self.listDataPaths.clear()
+        self.txtLog.append('Added the selected data to the project' + '\n')
 
     def GenerateImageSets_Clicked(self):
         self.fm.check_project_dir(self.fm.project_path)
