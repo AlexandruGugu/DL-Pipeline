@@ -286,17 +286,25 @@ class Ui_Preprocessing(object):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
-        print(directory)
         if directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen):
             directory = directory + '/'
             self.fm = FileManager.FileManager(directory)
             self.fm.check_files()
             self.lblProject.setText(directory)
+            print(len(directory))
+            c = '/'
+            my_array = [pos for pos, char in enumerate(directory) if char == c]
+            print(my_array)
+            print(len(my_array))
+            slice_pos_in_array = len(my_array) - 4
+            slice_index = my_array[slice_pos_in_array]
+            project_name = directory[slice_index:]
+            project_name = "..." + project_name
+            print(project_name)
+            self.lblProject.setText(project_name)
             self.txtLog.append("Project loaded from " + directory + "\n")
             self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
             self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
-        else:
-            print('hello')
 
     def SelectData_Clicked(self):
         dialog = QtWidgets.QFileDialog()
