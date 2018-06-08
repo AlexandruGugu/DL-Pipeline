@@ -282,6 +282,7 @@ class FileManager():
                 if obj.find("./name[1]").text == class_name:
                     root.remove(obj)
             tree.write(filename)
+        self.generate_txt_files()
 
 
     def check_dimensions(self):

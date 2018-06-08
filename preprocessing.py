@@ -351,7 +351,7 @@ class Ui_Preprocessing(object):
         if action == deleteAction:
             selected_items = self.listDataPaths.selectedItems()
             for item in selected_items:
-                self.listDataPaths.items().remove(item)
+                self.listDataPaths.removeItemWidget(item)
 
 if __name__ == "__main__":
     import sys
