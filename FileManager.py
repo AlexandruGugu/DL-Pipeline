@@ -13,6 +13,10 @@ class LabelClass():
         self.txt_lines = []
         self.object_count = 0
         self.files = []
+        self.files_with_class = []
+        self.files_without_class = []
+
+
 class FileManager():
 
     images_extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
@@ -185,8 +189,10 @@ class FileManager():
                 line = ''
                 if file_id in value.files:
                     line = file_id + ' 1'
+                    self.files_per_class[key].files_with_class.append(line)
                 else:
                     line = file_id + ' -1'
+                    self.files_per_class[key].files_without_class.append(line)
                 self.files_per_class[key].txt_lines.append(line)
         #generate imageset txt files for classes with all the lines in random order
         with open(self.project_path + 'VOC2012/pascal_label_map.pbtxt', 'w') as f:
@@ -194,28 +200,53 @@ class FileManager():
         counter = 0
         self.files_per_class = collections.OrderedDict(sorted(self.files_per_class.items()))
         for key, value in self.files_per_class.items():
-            data = [(random.random(), line) for line in value.txt_lines]
+            data = [(random.random(), line) for line in value.files_with_class]
             data.sort()
             train_count = int(len(data) * percentage / 100)
+            total_train_count = train_count
+            train_files_array = []
             eval_count = len(data) - train_count
+            total_eval_count = eval_count
+            eval_files_array = []
             true_count_val = 0
             true_count_train = 0
-            with open(self.project_path+'VOC2012/ImageSets/Main/'+str(key) + '_val.txt', 'w') as f:
-                for index in range(0,eval_count):
-                    f.write(data[index][1] + '\n')
-                    if data[index][1][-2] != '-':
-                        true_count_val += 1
-            with open(self.project_path+'VOC2012/ImageSets/Main/'+str(key) + '_train.txt', 'w') as f:
-                for index in range(eval_count, len(data)):
-                    f.write(data[index][1] + '\n')
-                    if data[index][1][-2] != '-':
-                        true_count_train += 1
+            for index in range(0,eval_count):
+                eval_files_array.append(data[index][1])
+                if data[index][1][-2] != '-':
+                    true_count_val += 1
+            for index in range(eval_count, len(data)):
+                train_files_array.append(data[index][1])
+                if data[index][1][-2] != '-':
+                    true_count_train += 1
 
+            data = [(random.random(), line) for line in value.files_without_class]
+            data.sort()
+            train_count = int(len(data) * percentage / 100)
+            total_train_count = total_train_count + train_count
+            eval_count = len(data) - train_count
+            total_eval_count = total_eval_count + eval_count
+            for index in range(0,eval_count):
+                eval_files_array.append(data[index][1])
+                if data[index][1][-2] != '-':
+                    true_count_val += 1
+            for index in range(eval_count, len(data)):
+                train_files_array.append(data[index][1])
+                if data[index][1][-2] != '-':
+                    true_count_train += 1
+            data = [(random.random(), line) for line in train_files_array]
+            data.sort()
+            with open(self.project_path+'VOC2012/ImageSets/Main/'+str(key) + '_train.txt', 'w') as f:
+                for index in range(0, len(data)):
+                    f.write(data[index][1] + '\n')
+            data = [(random.random(), line) for line in eval_files_array]
+            data.sort()
+            with open(self.project_path+'VOC2012/ImageSets/Main/'+str(key) + '_val.txt', 'w') as f:
+                for index in range(0, len(data)):
+                    f.write(data[index][1] + '\n')
             notification_message = notification_message + '---' + key + '---\n'
             notification_message = notification_message + 'Total number of objects: ' + str(value.object_count) + '\n'
-            notification_message = notification_message + 'Training images : ' + str(train_count) + '(' + str(true_count_train) + ' with objects)\n'
-            notification_message = notification_message + 'Evaluation images: ' + str(eval_count) + '(' + str(true_count_val) + ' with objects)\n\n'
-
+            notification_message = notification_message + 'Training images : ' + str(total_train_count) + '(' + str(true_count_train) + ' with objects)\n'
+            notification_message = notification_message + 'Evaluation images: ' + str(total_eval_count) + '(' + str(true_count_val) + ' with objects)\n\n'
             #notification_message = notification_message + "Class " + key + " contains " + str(value.object_count) + " objects.\n"
             #notification_message = notification_message + "ImageSet file for class " + key + " training was generated with " + str(train_count) + " images.\n"
             #notification_message = notification_message + "ImageSet file for class " + key + " evaluation was generated with " + str(eval_count) + " images.\n"
