@@ -277,6 +277,8 @@ class Ui_Preprocessing(object):
             self.txtLog.append("Project created at " + directory + "\n")
             self.fm = FileManager.FileManager(directory)
             self.lblProject.setText(directory)
+            project_name = self.shorten_project_name(directory)
+            self.lblProject.setText(project_name)
             self.txtProjectName.clear()
             self.txtLog.append("Project created at " + directory + "\n")
 
@@ -286,17 +288,16 @@ class Ui_Preprocessing(object):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
         directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
                                                 os.path.curdir)
-        print(directory)
         if directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen):
             directory = directory + '/'
             self.fm = FileManager.FileManager(directory)
             self.fm.check_files()
             self.lblProject.setText(directory)
+            project_name = self.shorten_project_name(directory)
+            self.lblProject.setText(project_name)
             self.txtLog.append("Project loaded from " + directory + "\n")
             self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
             self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
-        else:
-            print('hello')
 
     def SelectData_Clicked(self):
         dialog = QtWidgets.QFileDialog()
@@ -352,6 +353,17 @@ class Ui_Preprocessing(object):
             selected_items = self.listDataPaths.selectedItems()
             for item in selected_items:
                 self.listDataPaths.removeItemWidget(item)
+
+    def shorten_project_name(self, directory):
+        c = '/'
+        array_with_indexes = [pos for pos, char in enumerate(directory) if char == c]
+        slice_pos_in_array_begin = 1
+        slice_index_begin = array_with_indexes[slice_pos_in_array_begin]
+        slice_pos_in_array_end = len(array_with_indexes) - 3
+        slice_index_end = array_with_indexes[slice_pos_in_array_end]
+        project_name = directory[slice_index_end:]
+        project_name = directory[:slice_index_begin+1] + "..." + project_name
+        return project_name
 
 if __name__ == "__main__":
     import sys
