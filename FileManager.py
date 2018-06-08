@@ -44,6 +44,7 @@ class FileManager():
         self.all_xml_files = []
         for ext in FileManager.images_extensions:
             self.all_image_files.extend(glob.glob(project_path + 'VOC2012/JPEGImages/*.' + ext))
+        self.edit_img_extension()
         for ext in FileManager.labels_extensions:
             self.all_xml_files.extend(glob.glob(project_path + 'VOC2012/Annotations/*.' + ext))
 
@@ -130,6 +131,10 @@ class FileManager():
         for filename in self.all_bad_labels:
             os.rename(filename, self.project_path + '/bad_files/' + filename.split('/')[-1])
 
+    def edit_img_extension(self):
+        for filename in self.all_image_files:
+            if filename.split('.')[-1] != 'jpg':
+                os.rename(filename, filename.split('.')[0] + '.jpg')
 
 
     def edit_label_xml(self):
@@ -286,43 +291,9 @@ class FileManager():
 
 
     def check_dimensions(self):
-        # check labels dimensions compared to picture sizes
+
         problem_files = []
-        for filename in self.all_xml_files:
-            file_id = filename.split("/")[-1].split(".")[0]
-            # parse xml file
-            tree = ET.parse(filename)
-            root = tree.getroot()
-            WIDTH = 0
-            HEIGHT = 0
-            # set up new folder name
-            for name in root.iter('width'):
-                WIDTH = name.text
-            for name in root.iter('height'):
-                HEIGHT = name.text
-            for name in root.iter('xmin'):
-                if (int(name.text) <= 0 or int(name.text) >= int(WIDTH)):
-                    problem_files.append(filename)
-                    print('The problem in: ', filename, ', Label has dimension:', int(name.text),
-                          ', while pictures max is ', int(WIDTH))
-            for name in root.iter('xmax'):
-                if (int(name.text) <= 0 or int(name.text) >= int(WIDTH)):
-                    problem_files.append(filename)
-                    print('The problem in: ', filename, ', Label has dimension:', int(name.text),
-                          ', while pictures max is ', int(WIDTH))
-            for name in root.iter('ymin'):
-                if (int(name.text) <= 0 or int(name.text) >= int(HEIGHT)):
-                    problem_files.append(filename)
-                    print('The problem in: ', filename, ', Label has dimension:', int(name.text),
-                          ', while pictures max is ', int(HEIGHT))
-            for name in root.iter('ymin'):
-                if (int(name.text) <= 0 or int(name.text) >= int(HEIGHT)):
-                    problem_files.append(filename)
-                    print('The problem in: ', filename, ', Label has dimension:', int(name.text),
-                          ', while pictures max is ', int(HEIGHT))
-        print(len(problem_files))  # 538
-        # -------------------------------------
-        # change pixels on the border
+        # change pixels
         for filename in self.all_xml_files:
             file_id = filename.split("/")[-1].split(".")[0]
             # parse xml file
@@ -340,11 +311,65 @@ class FileManager():
                     name.text = str(0)
             for name in root.iter('xmax'):
                 if (int(name.text) >= int(WIDTH)):
-                    name.text = str(int(name.text) - 1)
+                    name.text = str(int(WIDTH) - 1)
             for name in root.iter('ymin'):
                 if (int(name.text) <= 0):
                     name.text = str(0)
             for name in root.iter('ymax'):
                 if (int(name.text) >= HEIGHT):
-                    name.text = str(int(name.text) - 1)
+                    name.text = str(int(HEIGHT) - 1)
             tree.write(filename)
+
+
+    def resize_images(self, percentage):
+        from PIL import Image
+        #resize images
+        for infile in self.all_image_files:
+            file, ext = os.path.splitext(infile)
+            im = Image.open(infile)
+            new_size = [int(im.size[0] / 100 * percentage), int(im.size[1] / 100 * percentage)]
+            print(new_size)
+            im.thumbnail(new_size, Image.ANTIALIAS)
+            im.save(file + ext, "JPEG")
+
+        # resize labels
+        for filename in self.all_xml_files:
+            # parse xml file
+            tree = ET.parse(filename)
+            root = tree.getroot()
+            for name in root.iter('width'):
+                name.text = str(new_size[0])
+            for name in root.iter('height'):
+                name.text = str(new_size[1])
+            for name in root.iter('xmin'):
+                # print(int(int(name.text)/5))
+                name.text = str(int(int(name.text) / 100 * percentage))
+            for name in root.iter('xmax'):
+                # print(int(int(name.text)/5))
+                name.text = str(int(int(name.text) / 100 * percentage))
+            for name in root.iter('ymin'):
+                # print(int(int(name.text)/5))
+                name.text = str(int(int(name.text) / 100 * percentage))
+            for name in root.iter('ymax'):
+                # print(int(int(name.text)/5))
+                name.text = str(int(int(name.text) / 100 * percentage))
+            tree.write(filename)
+
+    def edit_config_paths(self):
+        lines = []
+        subfolders = [f.path for f in os.scandir(self.project_path + 'models/') if f.is_dir()]
+        for folder in subfolders:
+            with open(folder + 'pipeline.config', 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if 'fine_tune_checkpoint:' in line:
+                        line = '  fine_tune_checkpoint: "' + self.project_path + 'models' + line.split('models')[-1]
+                    if 'label_map_path:' in line:
+                        line =  '  label_map_path: "' + self.project_path + 'VOC2012/pascal_label_map.pbtxt"'
+                    if 'input_path:' in line:
+                        if '_val' in line:
+                            line = '    input_path: "' + self.project_path + 'project_val.record'
+                        else:
+                            line = '    input_path: "' + self.project_path + 'project_train.record'
+            with open(folder + 'pipeline.config', 'w') as f:
+                f.writelines(lines)
