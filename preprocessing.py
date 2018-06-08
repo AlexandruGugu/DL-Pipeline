@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import FileManager
+import class_editor
 import os
 
 class Ui_Preprocessing(object):
@@ -226,12 +227,14 @@ class Ui_Preprocessing(object):
         self.btnLoadAddData.clicked.connect(self.AddData_Clicked)
         self.btnGenerteImageSets.clicked.connect(self.GenerateImageSets_Clicked)
         self.btnGenerateRecords.clicked.connect(self.GenerateRecord_Clicked)
+        self.btnEditClasses.clicked.connect(self.EditClasses_Clicked)
         # self.btnUpdatePaths.clicked.connect(self.UpdatePaths_Clicked)
 
         self.listDataPaths.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listDataPaths.customContextMenuRequested.connect(self.OpenMenu)
-        # FILEMANAGER
+        # OBJECTS
         self.fm = None
+        self.window = None
 
     def retranslateUi(self, Preprocessing):
         _translate = QtCore.QCoreApplication.translate
@@ -383,6 +386,12 @@ class Ui_Preprocessing(object):
             selected_items = self.listDataPaths.selectedItems()
             for item in selected_items:
                 self.listDataPaths.removeItemWidget(item)
+
+    def EditClasses_Clicked(self):
+        editor = class_editor.Ui_ClassEditor()
+        self.window = QtWidgets.QMainWindow()
+        editor.setupUi(self.window)
+        self.window.show()
 
     def shorten_project_name(self, directory):
         c = '/'
