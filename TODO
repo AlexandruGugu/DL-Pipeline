@@ -1,7 +1,9 @@
 ----- DO NOW -----
 1. DOCUMENTATION & PUBLICATION
 2. Unit tests
+3. "Clean" the program when selecting a different project
 4. Log display messages improvement (display with out of total and %, more messages)
+5. Fix the "delete" button for selected data
 6. function for download model with config
 10. start training (run tf scripts)
 12. GUI Components for class modification
