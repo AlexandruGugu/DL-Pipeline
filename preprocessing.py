@@ -160,9 +160,6 @@ class Ui_Preprocessing(object):
         self.chkRecords = QtWidgets.QCheckBox(self.centralwidget)
         self.chkRecords.setObjectName("chkRecords")
         self.verticalLayout.addWidget(self.chkRecords)
-        self.chkModels = QtWidgets.QCheckBox(self.centralwidget)
-        self.chkModels.setObjectName("chkModels")
-        self.verticalLayout.addWidget(self.chkModels)
         self.gridLayout.addLayout(self.verticalLayout, 11, 3, 1, 1)
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setObjectName("pushButton")
@@ -219,23 +216,6 @@ class Ui_Preprocessing(object):
         self.retranslateUi(Preprocessing)
         QtCore.QMetaObject.connectSlotsByName(Preprocessing)
 
-        # BINDINGS
-        self.horizontalSlider.valueChanged.connect(self.sliderValueChanged)
-        self.btnNewProject.clicked.connect(self.NewProject_Clicked)
-        self.btnLoadProject.clicked.connect(self.SelectProject_Clicked)
-        self.btnAddSelectData.clicked.connect(self.SelectData_Clicked)
-        self.btnLoadAddData.clicked.connect(self.AddData_Clicked)
-        self.btnGenerteImageSets.clicked.connect(self.GenerateImageSets_Clicked)
-        self.btnGenerateRecords.clicked.connect(self.GenerateRecord_Clicked)
-        self.btnEditClasses.clicked.connect(self.EditClasses_Clicked)
-        # self.btnUpdatePaths.clicked.connect(self.UpdatePaths_Clicked)
-
-        self.listDataPaths.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.listDataPaths.customContextMenuRequested.connect(self.OpenMenu)
-        # OBJECTS
-        self.fm = None
-        self.window = None
-
     def retranslateUi(self, Preprocessing):
         _translate = QtCore.QCoreApplication.translate
         Preprocessing.setWindowTitle(_translate("Preprocessing", "PreProcessor"))
@@ -270,7 +250,6 @@ class Ui_Preprocessing(object):
         self.chkMap.setText(_translate("Preprocessing", "Label Map"))
         self.chkImagesets.setText(_translate("Preprocessing", "Imagesets"))
         self.chkRecords.setText(_translate("Preprocessing", "TF Records"))
-        self.chkModels.setText(_translate("Preprocessing", "Models"))
         self.pushButton.setText(_translate("Preprocessing", "Import Model"))
         self.pushButton_2.setText(_translate("Preprocessing", "Start training"))
         self.pushButton_3.setText(_translate("Preprocessing", "Start evaluation"))
@@ -279,130 +258,6 @@ class Ui_Preprocessing(object):
         self.actionDocumentation.setText(_translate("Preprocessing", "Documentation"))
         self.actionLocal_Paths.setText(_translate("Preprocessing", "Set path to tensorflow"))
 
-
-    def sliderValueChanged(self, value):
-        self.lblTrainPercentage.setText(str(value) + '%')
-        self.lblEvalPercentage.setText(str(100 - value) + '%')
-        if self.fm != None:
-            if self.fm.all_image_files != None:
-                data_count = len(self.fm.all_image_files)
-                train_count = int(data_count * value / 100)
-                eval_count = data_count - train_count
-                self.lblEvalCount.setText(str(eval_count))
-                self.lblTrainCount.setText(str(train_count))
-
-    def NewProject_Clicked(self):
-        # self.txtLog.setText('works')
-        if self.txtProjectName.toPlainText() == '':
-            self.txtLog.append('Please enter a project name!')
-            return
-        dialog = QtWidgets.QFileDialog()
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
-                                                os.path.curdir)
-        if directory  and dialog.result() == QtWidgets.QFileDialog.AcceptOpen:
-            directory = directory + '/' + self.txtProjectName.toPlainText() + '/'
-            self.fm = FileManager.FileManager(directory)
-            self.lblProject.setText(directory)
-            self.txtProjectName.clear()
-            self.fm = FileManager.FileManager(directory)
-            self.lblProject.setText(directory)
-            project_name = self.shorten_project_name(directory)
-            self.lblProject.setText(project_name)
-            self.txtProjectName.clear()
-            self.txtLog.append("Project created at " + directory + "\n")
-
-    def SelectProject_Clicked(self):
-        dialog = QtWidgets.QFileDialog()
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory In Which To Create Project Folder',
-                                                os.path.curdir)
-        if directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen):
-            directory = directory + '/'
-            self.fm = FileManager.FileManager(directory)
-            self.fm.check_files()
-            self.lblProject.setText(directory)
-            project_name = self.shorten_project_name(directory)
-            self.lblProject.setText(project_name)
-            self.txtLog.append("Project loaded from " + directory + "\n")
-            self.txtLog.append('You have jpg files: ' + str(len(self.fm.all_image_files)) + '\n')
-            self.txtLog.append('You have xml files: ' + str(len(self.fm.all_xml_files)) + '\n')
-
-    def SelectData_Clicked(self):
-        dialog = QtWidgets.QFileDialog()
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        directory = dialog.getExistingDirectory(None, 'Choose Directory That Contains Pictures/Labels',
-                                                os.path.curdir) + '/'
-        if directory and dialog.result() == QtWidgets.QFileDialog.AcceptOpen:
-            items = self.listDataPaths.findItems(directory, QtCore.Qt.MatchExactly)
-            if len(items) == 0:
-                self.listDataPaths.addItem(directory)
-        self.txtLog.append('Selected data.' + '\n')
-
-    def AddData_Clicked(self):
-        self.fm.check_project_dir(self.fm.project_path)
-        data_paths = []
-        for index in range(self.listDataPaths.count()):
-            data_paths.append(str(self.listDataPaths.item(index).text()))
-            #print(str(self.listDataPaths.item(index).text()))
-        self.fm.import_files(data_paths, self.fm.project_path)
-        self.listDataPaths.clear()
-        self.txtLog.append('Added the selected data to the project' + '\n')
-
-    def GenerateImageSets_Clicked(self):
-        self.fm.check_project_dir(self.fm.project_path)
-        self.fm.check_files()
-        self.fm.edit_label_xml()
-        self.txtLog.append(self.fm.generate_txt_files(self.horizontalSlider.value()))
-
-    def UpdatePaths_Clicked(self):
-        self.fm.check_project_dir(self.fm.project_path)
-        self.fm.check_files()
-        self.fm.edit_label_xml()
-        # TODO:pipeline.cfg path
-
-    def GenerateRecord_Clicked(self):
-        # self.fm.edit_config_files()
-        if self.fm.tensorflow_path == '':
-            dialog = QtWidgets.QFileDialog()
-            dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-            dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-            directory = dialog.getExistingDirectory(None, 'Choose Tensorflow Root Directory (Eg. /home/user/.local/lib/python3.5/site-packages/tensorflow',
-                                                    os.path.curdir) + '/'
-            if not (directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen)):
-                print('tensorflow path not loaded')
-                return
-            self.fm.tensorflow_path = directory
-        self.fm.run_tf_record_script()
-
-    def OpenMenu(self, position):
-        menu = QtWidgets.QMenu()
-        deleteAction = menu.addAction("Delete")
-        action = menu.exec_(self.listDataPaths.mapToGlobal(position))
-        if action == deleteAction:
-            selected_items = self.listDataPaths.selectedItems()
-            for item in selected_items:
-                self.listDataPaths.removeItemWidget(item)
-
-    def EditClasses_Clicked(self):
-        editor = class_editor.Ui_ClassEditor()
-        self.window = QtWidgets.QMainWindow()
-        editor.setupUi(self.window)
-        self.window.show()
-
-    def shorten_project_name(self, directory):
-        c = '/'
-        array_with_indexes = [pos for pos, char in enumerate(directory) if char == c]
-        slice_pos_in_array_begin = 1
-        slice_index_begin = array_with_indexes[slice_pos_in_array_begin]
-        slice_pos_in_array_end = len(array_with_indexes) - 3
-        slice_index_end = array_with_indexes[slice_pos_in_array_end]
-        project_name = directory[slice_index_end:]
-        project_name = directory[:slice_index_begin+1] + "..." + project_name
-        return project_name
 
 if __name__ == "__main__":
     import sys

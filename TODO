@@ -1,13 +1,9 @@
 ----- DO NOW -----
 1. DOCUMENTATION & PUBLICATION
-2. Unit tests
-3. "Clean" the program when selecting a different project
-4. Log display messages improvement (display with out of total and %, more messages)
-5. Fix the "delete" button for selected data
-6. function for download model with config
-10. start training (run tf scripts)
-12. GUI Components for class modification
 
+2. Unit tests
+
+3. function for download model with config
 
 
 
@@ -24,10 +20,3 @@
 6 history
 
 
-
-RECENTLY COMPLETED
-5. function for pipeline config path edit
-8. image resize functionality
-9. label inside image check
-7. imageset constraints (same % of -1 and 1 in train and val)
-11. GUI redesign - checkboxes with completed and status of files - changes need to be added to .py files
