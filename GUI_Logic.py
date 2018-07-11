@@ -131,11 +131,11 @@ class GUI(preprocessing.Ui_Preprocessing):
     def AddData_Clicked(self):
         try:
             if self.listDataPaths.count() > 0 and self.chkProject.isChecked():
-                self.fm.check_project_dir(self.fm.project_path)
+                self.fm.check_project_dir()
                 data_paths = []
                 for index in range(self.listDataPaths.count()):
                     data_paths.append(str(self.listDataPaths.item(index).text()))
-                self.fm.import_files(data_paths, self.fm.project_path)
+                self.fm.import_files(data_paths)
                 self.listDataPaths.clear()
                 self.chkData.setChecked(True)
                 self.txtLog.append('Added the selected data to the project')
@@ -146,7 +146,7 @@ class GUI(preprocessing.Ui_Preprocessing):
     def GenerateImageSets_Clicked(self):
         try:
             if self.chkProject and self.chkData:
-                self.fm.check_project_dir(self.fm.project_path)
+                self.fm.check_project_dir()
                 msg = self.fm.check_files()
                 if msg != '':
                     self.txtLog.append(msg)
@@ -159,15 +159,6 @@ class GUI(preprocessing.Ui_Preprocessing):
             self.txtLog.append('An unexpected error occurred!')
             raise
 
-    # def UpdatePaths_Clicked(self):
-    #     try:
-    #         self.fm.check_project_dir(self.fm.project_path)
-    #         self.fm.check_files()
-    #         self.fm.edit_label_xml()
-    #         self.fm.edit_config_paths()
-    #     except:
-    #         self.txtLog.append('An unexpected error occurred!')
-    #         raise
 
     def GenerateRecord_Clicked(self):
         try:
@@ -176,7 +167,7 @@ class GUI(preprocessing.Ui_Preprocessing):
                     dialog = QtWidgets.QFileDialog()
                     dialog.setFileMode(QtWidgets.QFileDialog.Directory)
                     dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-                    directory = dialog.getExistingDirectory(None, 'Choose Tensorflow Root Directory (Eg. /home/user/.local/lib/python3.5/site-packages/tensorflow',
+                    directory = dialog.getExistingDirectory(None, 'Choose Tensorflow Root Directory (Eg. /home/user/.local/lib/python3.5/site-packages/tensorflow)',
                                                             os.path.curdir) + '/'
                     if not (directory and (dialog.result() == QtWidgets.QFileDialog.AcceptOpen)):
                         self.txtLog.append('tensorflow path not loaded')

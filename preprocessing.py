@@ -7,9 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import FileManager
-import class_editor
-import os
+
 
 class Ui_Preprocessing(object):
     def setupUi(self, Preprocessing):

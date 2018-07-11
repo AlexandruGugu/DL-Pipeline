@@ -9,6 +9,8 @@ import numpy as np
 #import imageio as imio
 import shutil
 class LabelClass():
+    """This is a small class used to store data extracted from the label for each class. It also contains data necessary for the imageset file generation.
+    """
     def __init__(self):
         self.txt_lines = []
         self.object_count = 0
@@ -18,7 +20,8 @@ class LabelClass():
 
 
 class FileManager():
-
+    """This class contains all the methods used to manage and setup files for tensorflow object detection API.
+    """
     images_extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
     labels_extensions = ['xml']
     dirs_linux = ['VOC2012', 'models']
@@ -27,8 +30,13 @@ class FileManager():
 
 
     def __init__(self, project_path):
+        """Class initializer.
+        Initializes multiple instance specific lists and variables.
+        Args:
+            project_path (string) : String containing the path to the root directory of the project, including '/' at the end.
+        """
         self.project_path = project_path
-        self.check_project_dir(project_path)
+        self.check_project_dir()
 
         self.tensorflow_path = ''
         self.imageset_percetange = 0
@@ -51,21 +59,29 @@ class FileManager():
         self.edit_img_extension()
         for ext in FileManager.labels_extensions:
             self.all_xml_files.extend(glob.glob(project_path + 'VOC2012/Annotations/*.' + ext))
+        self.edit_label_xml()
 
 
 
-    def check_project_dir(self, project_path):
+    def check_project_dir(self):
+        """This method checks if the VOC2012 directory structures exists at the projects path. In case it is missing or incomplete, the missing folders will be generated.
+        """
         #checks if VOC2012 directory structure exists at given path and creates it if it doesn't exist
-        if not(os.path.exists(project_path)):
-            os.makedirs(project_path)
+        if not(os.path.exists(self.project_path)):
+            os.makedirs(self.project_path)
         for dir in FileManager.dirs_linux:
-            if not(os.path.exists(project_path+dir)):
-                os.makedirs(project_path+dir)
+            if not(os.path.exists(self.project_path+dir)):
+                os.makedirs(self.project_path+dir)
         for dir in FileManager.subdirs_linux:
-            if not(os.path.exists(project_path+dir)):
-                os.makedirs(project_path+dir)
+            if not(os.path.exists(self.project_path+dir)):
+                os.makedirs(self.project_path+dir)
+        if not os.path.exists(self.project_path + 'VOC2012/ImageSets/Main'):
+            os.makedirs(self.project_path + 'VOC2012/ImageSets/Main')
 
-    def import_files(self, data_paths, project_path):
+    def import_files(self, data_paths):
+        """This method imports all the images and labels to the project from the seleccted locations. After the files are copied the labels are editted for their new location and then the files are checked(see edit_label_xml() and check_files() for mroe infor).
+        :param data_paths(array of strings): Contains paths to folders containg images/labels to be imported to the project.
+        """
         img_files = []
         xml_files = []
         for path in data_paths:
@@ -76,22 +92,25 @@ class FileManager():
                 img_files.extend(glob.glob(path + "*." + ext))
         for filename in img_files:
             file_id = filename.split("/")[-1]
-            shutil.copy(filename, project_path+"VOC2012/JPEGImages/"+file_id.split(".")[0]+".jpg")
+            shutil.copy(filename, self.project_path+"VOC2012/JPEGImages/"+file_id.split(".")[0]+".jpg")
         for filename in xml_files:
             file_id = filename.split("/")[-1]
-            shutil.copy(filename, project_path + "VOC2012/Annotations/" + file_id)
+            shutil.copy(filename, self.project_path + "VOC2012/Annotations/" + file_id)
 
         # All needed files in folder
         self.all_image_files = []
         self.all_xml_files = []
         for ext in FileManager.images_extensions:
-            self.all_image_files.extend(glob.glob(project_path + 'VOC2012/JPEGImages/*.' + ext))
+            self.all_image_files.extend(glob.glob(self.project_path + 'VOC2012/JPEGImages/*.' + ext))
         for ext in FileManager.labels_extensions:
-            self.all_xml_files.extend(glob.glob(project_path + 'VOC2012/Annotations/*.' + ext))
+            self.all_xml_files.extend(glob.glob(self.project_path + 'VOC2012/Annotations/*.' + ext))
         self.edit_label_xml()
         self.check_files()
 
     def check_files(self):
+        """This method checks for  "bad files", which have wrong extensions or are missing the corresponding image/label file. The bad files are moved to a bad_files folder.
+        :return(string): Contains a notification message to be displayed for users.
+        """
         notification_message = ''
         #check for wrong files in import source folders
         for index, filename in enumerate(self.all_files_in_import_folders):
@@ -127,13 +146,18 @@ class FileManager():
         for filename in self.all_bad_labels:
             os.rename(filename, self.project_path + '/bad_files/' + filename.split('/')[-1])
         return notification_message
+
     def edit_img_extension(self):
+        """This method edits extensions of all image files to '.jpg'. Please take note that you have to also run edit_label_xml() to change the extensions of the images within the label files aswell.
+        """
         for filename in self.all_image_files:
             if filename.split('.')[-1] != 'jpg':
                 os.rename(filename, filename.split('.')[0] + '.jpg')
 
 
     def edit_label_xml(self):
+        """This method edits the paths contained within the xml label files to the correct path of the project and also changes the names of all images contained to have .jpg extension(the strings within the xml is edited, not the actual images).
+        """
         # change path and folder name for annotations
         xml_files = glob.glob(self.project_path+'VOC2012/Annotations/*.xml')
         for filename in xml_files:
@@ -154,10 +178,9 @@ class FileManager():
             tree.write(filename)
 
     def fill_data(self):
+        """This method populate the files_per_class dictionary contained by this instance of the FileManager class based on the data currently existing in the project directory structure. This dictionary contains important data for imageset and labelmap generation.
+        """
         self.files_per_class = {}
-        if not os.path.exists(self.project_path + 'VOC2012/ImageSets/Main'):
-            os.makedirs(self.project_path + 'VOC2012/ImageSets/Main')
-
         #parsing xml
         for filename in self.all_xml_files:
             file_id = filename.split("/")[-1].split(".")[0]
@@ -189,6 +212,10 @@ class FileManager():
             self.total_object_count += value.object_count
 
     def generate_txt_files(self, percentage):
+        """This method generates all imageset files aswell as the pascal_label_map.pbtxt file. Distribution of files within the imageset files is done randomly and based on the given percentage determining the split between training and evaluation.
+        :param percentage(float): A value between 1 and 100 representing the % of data files to be used for training. The rest will be used for evaluation.
+        :return(string): A notification message to be displayed for users, containing information regarding the files and classes in the project and how they are split between training and evaluation.
+        """
         self.fill_data()
         notification_message = ''
         #generate imageset txt files for classes with all the lines in random order
@@ -256,6 +283,9 @@ class FileManager():
         return notification_message
 
     def edit_script(self, script_path):
+        """This method edits the record generation script as needed in order to be run for the current project, replacing the name of a class contained in the script with one from the current project.
+        :param script_path(string): The path to .../tensorflow/models/research/object_detection/dataset_tools/create_pascal_tf_record.py
+        """
         new_text = ''
         with open(script_path, 'r') as f:
             text = f.read()
@@ -283,6 +313,10 @@ class FileManager():
             os.system('python3 ' + script_path + ' --data_dir=' + data_dir + ' --year=VOC2012 --set=val --output_path=' + data_dir + 'project_val.record --label_map_path=' + lbl_map_path)
 
     def rename_class(self, old_name, new_name):
+        """This method renames an existing class within all the label files of the project.
+        :param old_name(string): Old name of a class.
+        :param new_name(string): New name for the class.
+        """
         for filename in self.all_xml_files:
             tree = ET.parse(filename)
             root = tree.getroot()
@@ -293,6 +327,9 @@ class FileManager():
 
 
     def remove_class(self, class_name):
+        """This method removes all instances of a class from the label files of the projects. This may lead to images that have empty labels with no objects in them.
+        :param class_name(string): Name of the class to be removed.
+        """
         for filename in self.all_xml_files:
             tree = ET.parse(filename)
             root = tree.getroot()
@@ -303,8 +340,8 @@ class FileManager():
 
 
     def check_dimensions(self):
-
-        problem_files = []
+        """This method checks and edits all xml label files to make sure that the bounding boxes of the labels do not go outside the boundaries of their respective images.
+        """
         # change pixels
         for filename in self.all_xml_files:
             file_id = filename.split("/")[-1].split(".")[0]
@@ -334,6 +371,9 @@ class FileManager():
 
 
     def resize_images(self, percentage):
+        """This method resizes images based on a percentage. It also edits the sizes of the images within their xml label files.
+        :param percentage(float): A value from 1 to 100 representing the percentage to which the images will be resized. (for x they will become x% of the original size)
+        """
         from PIL import Image
         #resize images
         for infile in self.all_image_files:
@@ -363,6 +403,8 @@ class FileManager():
             tree.write(filename)
 
     def edit_config_paths(self):
+        """This method edits all existing pipeline.config files of the project to contain the correct paths to the project files.
+        """
         lines = []
         subfolders = [f.path for f in os.scandir(self.project_path + 'models/') if f.is_dir()]
         for folder in subfolders:
@@ -382,6 +424,9 @@ class FileManager():
                 f.writelines(lines)
 
     def edit_config_path(self,path):
+        """This method edits a single pipeline.config file at a given path to contain the correct paths to the project files.
+        :param path(string):  The path to a folder that contains a pipeline.config file.
+        """
         with open(path + 'pipeline.config', 'r') as f:
             lines = f.readlines()
             for line in lines:
@@ -398,6 +443,9 @@ class FileManager():
             f.writelines(lines)
 
     def run_training(self, path_to_model):
+        """This method uses the given model to start tensorflow object detection api training.
+        :param path_to_model(string): Path to the model to be used for training.
+        """
         if os.path.exists(self.tensorflow_path + 'models/research/object_detection/dataset_tools'):
             self.edit_config_path(path_to_model)
             script_path = self.tensorflow_path + 'models/research/object_detection/train.py'
@@ -406,6 +454,9 @@ class FileManager():
             os.system(command)
 
     def run_evaluation(self, path_to_model):
+        """This method uses the given model to start tensorflow object detection api evaluation.
+        :param path_to_model(string): Path to model to be used for evaluation.
+        """
         if os.path.exists(self.tensorflow_path + 'models/research/object_detection/dataset_tools'):
             self.edit_config_path(path_to_model)
             script_path = self.tensorflow_path + 'models/research/object_detection/train.py'
@@ -414,6 +465,8 @@ class FileManager():
             os.system(command)
 
     def check_imagesets(self):
+        """This method checks the existing imageset files to determine the percentage of files used for training.
+        """
         train_file = glob.glob(self.project_path + 'VOC2012/ImageSets/Main/*train*')[0]
         val_file = glob.glob(self.project_path + 'VOC2012/ImageSets/Main/*val*')[0]
         train_count = 0
@@ -428,7 +481,4 @@ class FileManager():
 
         if train_count != 0 and val_count != 0:
             self.imageset_percetange = train_count / (train_count + val_count)  * 100
-            print(val_count)
-            print(train_count)
-            print(self.imageset_percetange)
 
